@@ -1,4 +1,4 @@
-## ctest
+## cargtest
 
 Run `cargo test` one by one for all tests, failing as soon as a test fails (for some reason my `cargo test` runs all tests as if I'm using `--no-fail-fast` even though I'm not).
 
