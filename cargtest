@@ -3,9 +3,20 @@
 from subprocess import check_output, CalledProcessError
 from os.path import exists
 from sys import exit
+from shutil import which
+from pathlib import Path
 
 # get all test methods from project
-test_grep = check_output(["rg", "-A=1", "-t=rust", "#\\[test\\]"]).decode("utf-8")
+if which("rg"):
+    args = ["rg", "-A=1", "-t=rust", "#\\[test\\]"]
+elif which("grep"):
+    rs_files = [str(p) for p in Path("src").glob("**/*.rs")]
+    args = ["grep", "-A", "1", "#\\[test\\]"] + rs_files
+else:
+    print("grep or ripgrep required")
+    exit(1)
+
+test_grep = check_output(args).decode("utf-8")
 tests = []
 for l in test_grep.split("\n"):
     if l == "--" or l.endswith("#[test]") or len(l) < 5:
