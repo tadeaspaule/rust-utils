@@ -1,0 +1,39 @@
+#!/usr/bin/env python3
+#
+from subprocess import check_output, CalledProcessError
+from os.path import exists
+from sys import exit
+
+# get all test methods from project
+test_grep = check_output(["rg", "-A=1", "-t=rust", "#\\[test\\]"]).decode("utf-8")
+tests = []
+for l in test_grep.split("\n"):
+    if l == "--" or l.endswith("#[test]") or len(l) < 5:
+        continue
+    tests.append(l[4:l.index("(")].replace("/","::").replace(".rs-fn ","::"))
+
+# read .tests file for test order
+TESTS_FILENAME = ".tests"
+all_tests = []
+if exists(TESTS_FILENAME):
+    with open(TESTS_FILENAME, "r") as f:
+        for line in f:
+            if len(line) > 1:
+                all_tests.append(line.strip())
+
+# add any tests not in .tests to it
+with open(TESTS_FILENAME, "a+") as f:
+    for test in tests:
+        if test not in all_tests:
+            f.write(test + "\n")
+            all_tests.append(test)
+
+# execute tests in order specified in .tests
+for test in all_tests:
+    try:
+       out = check_output(["cargo", "test", test]).decode("utf-8")
+       print(out)
+    except CalledProcessError as e:
+        print(e.output.decode("utf-8"))
+        exit(1)
+
